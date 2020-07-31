@@ -1,0 +1,4 @@
+Value LLDP_Status (\S+)
+
+Start
+  ^.*LLDP state.*: ${LLDP_Status}

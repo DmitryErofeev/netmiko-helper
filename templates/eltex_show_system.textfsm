@@ -1,0 +1,6 @@
+Value Model (.*)
+Value Mac (.*)
+
+Start
+  ^.*System Description: *${Model}
+  ^.*System MAC Address: *${Mac}

@@ -1,0 +1,7 @@
+Exception has occurred: NetmikoTimeoutException
+Connection to device timed-out: eltex 10.150.0.52:22
+  File "C:\Users\Administrator\Desktop\netmiko\netmiko_netbox_kb.py", line 130, in <module>
+    with netmiko.ConnectHandler(**_params) as ssh:
+
+==========================================
+

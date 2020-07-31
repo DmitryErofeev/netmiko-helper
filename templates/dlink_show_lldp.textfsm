@@ -1,0 +1,6 @@
+Value LLDP_Status (\S+)
+Value LLDP_Forward_Status (\S+)
+
+Start
+  ^.*LLDP Status.*: ${LLDP_Status}
+  ^.*LLDP Forward Status.*: ${LLDP_Forward_Status}

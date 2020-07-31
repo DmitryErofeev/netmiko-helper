@@ -1,0 +1,4 @@
+Value LLDP_Enable (\S+)
+
+Start
+  ^${LLDP_Enable}\.

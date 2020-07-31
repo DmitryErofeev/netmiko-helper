@@ -1,0 +1,10 @@
+{
+    "netbox": {
+        "url": "http://localhost:8000/",
+        "token": "0123456789abcdef0123456789abcdef01234567"
+    },
+    "device": {
+        "username": "admin",
+        "password": "test"
+    }
+}

@@ -1,0 +1,1 @@
+{'lldp_status': 'Disabled', 'lldp_forward_status': 'Disabled'}

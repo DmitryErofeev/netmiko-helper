@@ -1,0 +1,5 @@
+Value ip ([\d.]+)
+Value vlan (\S+ +\d)
+
+Start
+  ^${ip}\S* *${vlan}
