@@ -1,0 +1,17 @@
+﻿[
+    {
+        "ip": "10.100.3.206",
+        "result": "ok",
+        "vendor": "d-link"
+    },
+    {
+        "error": [
+            {
+                "ssh_status": "disabled"
+            }
+        ],
+        "ip": "10.100.0.207",
+        "result": "error",
+        "vendor": "eltex"
+    }
+]

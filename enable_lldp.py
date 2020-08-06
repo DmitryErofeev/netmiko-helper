@@ -49,8 +49,8 @@ configs = {
 fail_to_connect = []
 
 
-def filter_by_key(_data_file, param):
-    return [d for d in _data_file if d[param[0]] == param[1]]
+def filter_by_key(_data_file, key):
+    return [d for d in _data_file if d[key[0]] == key[1]]
 
 
 def make_ports(device_id):
@@ -66,8 +66,8 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
     if len(_modified_data_file) > 0:
         raise NotImplementedError
 
-    # _modified_data_file = filter_by_key(_data_file, ('lldp_status', False))
-    _modified_data_file = filter_by_key(_data_file, ('lldp_status', True))  # for debug
+    _modified_data_file = filter_by_key(_data_file, ('lldp_status', False))
+    # _modified_data_file = filter_by_key(_data_file, ('lldp_status', True))  # for debug
 
     for device in _modified_data_file:
 
@@ -98,28 +98,30 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
                 if configs.get(_vendor):
                     _conf = [c.format(range=_range) for c in configs.get(_vendor)]
                     out = ssh.send_config_set(_conf)
-                    logger.info(f'Проверяю выполнение конфига Элтекса: {out}')
+                    logger.info(f'Выполнен конфиг Элтекса.')
+                    if "Unrecognized command" in out:
+                        logger.info(f'Ahtung!: {out}')
 
                 for command in commands[_vendor]:
 
-                    out = ssh.send_command(command.format(range=_range))
-                    if command.startswith('sh'):
-                        result = get_structured_data(
-                            out, command=command, platform=_driver)
-                        logger.info(f'Проверяю выполнение команд "show": {result}')
+                    # if command.startswith('sh') or command.startswith('en'):
+                    out = ssh.send_command(command.format(range=_range), use_textfsm=True)
+                    logger.info(f'Проверяю выполнение команды: {command}: {out}')
 
-                        if not isinstance(result, list):
-                            raise ValueError("Error in result", result, _params['ip'], command)
+                    if not isinstance(out, list):
+                        raise ValueError("Error in result", out, _params['ip'], command)
 
-                    else:
-                        logger.info(f'Посылаю команду: {out}')
+                    # else:
+                    #     out = ssh.send_command(command.format(range=_range))
+                    #     logger.info(f'Посылаю команду: {out}')
 
 
-                    ssh.save_config()
+                ssh.save_config()
                 # report.append(_device)
         except Exception as ex :
             # print(_ip, ex)
             fail_to_connect.append({_ip: ex.args})
 
 # print('', report)
-logger.info(f'Невозможно соединиться: {fail_to_connect}')
+if fail_to_connect:
+    logger.info(f'Невозможно соединиться: {fail_to_connect}')

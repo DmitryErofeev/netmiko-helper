@@ -36,7 +36,7 @@ commands = {
         'sh snmp'
     ],
 
-    'dlink_ds_telnet':
+    'd-link':
     [
         'sh sw',
         'sh lldp'
@@ -92,7 +92,7 @@ for device in _list:
             }
 
 
-            for command in commands[_params['device_type']]:
+            for command in commands.get(_device['vendor']):
                 out = ssh.send_command(command)
                 result = get_structured_data(
                     out, command=command, platform=_driver)
@@ -112,12 +112,12 @@ for device in _list:
             _device['snmp_status'] = make_true(_device.get('snmp_status'))
 
             report.append(_device)
-    except Exception as ex :
+    except netmiko.ssh_exception.NetMikoTimeoutException as ex :
         print(_ip, ex)
         fail_to_connect.append({_ip: ex.args})
 
 pprint(report)
-pprint(fail_to_connect)
+print('Невозможно соединиться:', fail_to_connect)
 
 
 with open('output/result.json', 'w', encoding='utf-8-sig') as json_file:
