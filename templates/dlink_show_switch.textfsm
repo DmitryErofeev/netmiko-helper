@@ -14,5 +14,5 @@ Start
   ^.*Firmware Version.*:( \S+ | )${Software}
   ^.*Hardware Version.*: ${Hardware}
   ^.*Serial Number.*: ${Serial}
-  ^.*SSH Status.*: ${SSH_Status}
+  ^.*SSH (?:Status)?.*: ${SSH_Status}
   ^.*SNMP.*: ${SNMP_Status}

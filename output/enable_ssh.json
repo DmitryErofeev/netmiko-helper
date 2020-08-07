@@ -1,17 +1,12 @@
 ﻿[
     {
-        "ip": "10.100.3.206",
-        "result": "ok",
+        "error": "10060 - TimeoutError",
+        "ip": "10.100.3.205",
         "vendor": "d-link"
     },
     {
-        "error": [
-            {
-                "ssh_status": "disabled"
-            }
-        ],
         "ip": "10.100.0.207",
-        "result": "error",
+        "result": "ok",
         "vendor": "eltex"
     }
 ]

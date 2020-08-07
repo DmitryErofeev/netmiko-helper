@@ -44,7 +44,7 @@ commands = {
 
 }
 
-_list = nb.dcim.devices.filter(region='tc', role='access-switch')
+_list = nb.dcim.devices.filter(region='kb', role='access-switch')
 
 fail_to_connect = []
 
@@ -112,8 +112,8 @@ for device in _list:
             _device['snmp_status'] = make_true(_device.get('snmp_status'))
 
             report.append(_device)
-    except netmiko.ssh_exception.NetMikoTimeoutException as ex :
-        print(_ip, ex)
+    except (TimeoutError, netmiko.ssh_exception.NetMikoTimeoutException) as ex :
+        print(_ip, ex.strerror)
         fail_to_connect.append({_ip: ex.args})
 
 pprint(report)
