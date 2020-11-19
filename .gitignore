@@ -247,4 +247,5 @@ $RECYCLE.BIN/
 *.xlsx
 config.json
 output/result.json
+output/enable_ssh.json
 test.log

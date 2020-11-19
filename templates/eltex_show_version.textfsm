@@ -4,10 +4,3 @@ Value Hardware (\S+)
 Start
   ^.*SW version *${Software}
   ^.*HW version *${Hardware}
-
-# -> Record
-# parse.header
-
-# SW version    1.1.48.7[fc3f05fc] ( date  27-Dec-2019 time  15:46:29 )
-# Boot version    0.0.1.7 ( date  18-May-2018 time  16:00:07 )
-# HW version    01.04

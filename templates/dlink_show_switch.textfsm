@@ -4,11 +4,11 @@ Value Mac (\S+)
 Value Software (\S+)
 Value Hardware (\S+)
 Value Serial (\S+)
-Value SSH_Status (\S+)
+Value SSH_Status (\w+)
 Value SNMP_Status (\S+)
 
 Start
-  ^.*Device.*: ${Model}
+  ^.*Device (?!Uptime).*: ${Model}
   ^.*IP Address.*: ${IP}
   ^.*MAC Address.*: ${Mac}
   ^.*Firmware Version.*:( \S+ | )${Software}

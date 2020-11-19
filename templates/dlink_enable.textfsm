@@ -1,0 +1,4 @@
+Value Enable (\S+)
+
+Start
+  ^${Enable}\.

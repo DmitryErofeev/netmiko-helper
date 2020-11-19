@@ -1,10 +1,10 @@
-import netmiko
-from pprint import pprint
-from netmiko.utilities import get_structured_data
 import json
 import logging
-import pynetbox
+from pprint import pprint
 
+import netmiko
+import pynetbox
+from netmiko.utilities import get_structured_data
 
 with open("config.json") as json_conf_file:
     conf = json.load(json_conf_file)
@@ -32,8 +32,8 @@ commands = {
         'sh system',
         'sh lldp configuration',
         'sh ver',
-        'sh ip ssh',
-        'sh snmp'
+        # 'sh ip ssh',
+        # 'sh snmp'
     ],
 
     'd-link':
@@ -45,6 +45,7 @@ commands = {
 }
 
 _list = nb.dcim.devices.filter(region='kb', role='access-switch')
+# _list = [nb.dcim.devices.get(9128),]
 
 fail_to_connect = []
 
@@ -101,7 +102,8 @@ for device in _list:
                 if isinstance(result, list):
                     _device.update(result[0])
                 else:
-                    raise ValueError("Error in result", result, _device, command)
+                    fail_to_connect.append(_device['ip'])
+                    # raise ValueError("Error in result", result, _device, command)
 
             _device['lldp_status'] = make_true(_device.get('lldp_status'))
 
@@ -112,12 +114,18 @@ for device in _list:
             _device['snmp_status'] = make_true(_device.get('snmp_status'))
 
             report.append(_device)
-    except (TimeoutError, netmiko.ssh_exception.NetMikoTimeoutException) as ex :
-        print(_ip, ex.strerror)
+    except (
+        TimeoutError,
+        ValueError,
+        netmiko.ssh_exception.NetMikoTimeoutException,
+        netmiko.ssh_exception.NetmikoAuthenticationException
+    ) as ex:
+        print(_ip, ex.args)
         fail_to_connect.append({_ip: ex.args})
+        continue
 
 pprint(report)
-print('Невозможно соединиться:', fail_to_connect)
+print('Невозможно соединиться или не парсится какая то команда:', fail_to_connect)
 
 
 with open('output/result.json', 'w', encoding='utf-8-sig') as json_file:

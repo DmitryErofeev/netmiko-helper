@@ -1,9 +1,10 @@
+import json
+
 import netmiko
 import pynetbox
-from netmiko.utilities import get_structured_data
-import json
 # import logging
 from loguru import logger
+from netmiko.utilities import get_structured_data
 
 # TODO: Check file exists
 with open("config.json") as json_conf_file:
@@ -50,7 +51,7 @@ fail_to_connect = []
 
 
 def filter_by_key(_data_file, key):
-    return [d for d in _data_file if d[key[0]] == key[1]]
+    return [d for d in _data_file if d['lldp_status'] == False]
 
 
 def make_ports(device_id):
@@ -59,17 +60,25 @@ def make_ports(device_id):
     return _ports_for_command
 
 
+def make_list_ip_for_enable_lldp(_data):
+    _list = [ {x['model']: x['ip']} for x in _data ]
+    return _list
+
+
 with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
     _data_file = json.load(data_file)
+    # _modified_data_file = filter_by_key(_data_file, ('lldp_forward_status', True))
+    # logger.info(f'Список на включение LLDP: {make_list_ip_for_enable_lldp(_modified_data_file)}')
+    logger.info(f'Итого: {len(make_list_ip_for_enable_lldp(_data_file))} штук')
 
-    _modified_data_file = filter_by_key(_data_file, ('lldp_forward_status', True))
-    if len(_modified_data_file) > 0:
-        raise NotImplementedError
 
-    _modified_data_file = filter_by_key(_data_file, ('lldp_status', False))
+    # if len(_modified_data_file) > 0:
+    #     raise NotImplementedError
+
+    # _modified_data_file = filter_by_key(_data_file, ('lldp_status' == False))
     # _modified_data_file = filter_by_key(_data_file, ('lldp_status', True))  # for debug
 
-    for device in _modified_data_file:
+    for device in _data_file:
 
         _range = make_ports(device['id'])
         _type = device['model']
@@ -100,12 +109,13 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
                     out = ssh.send_config_set(_conf)
                     logger.info(f'Выполнен конфиг Элтекса.')
                     if "Unrecognized command" in out:
-                        logger.info(f'Ahtung!: {out}')
+                        logger.info(f'Achtung!: {out}')
 
                 for command in commands[_vendor]:
 
                     # if command.startswith('sh') or command.startswith('en'):
-                    out = ssh.send_command(command.format(range=_range), use_textfsm=True)
+                    command = command.format(range=_range)
+                    out = ssh.send_command(command, use_textfsm=True)
                     logger.info(f'Проверяю выполнение команды: {command}: {out}')
 
                     if not isinstance(out, list):

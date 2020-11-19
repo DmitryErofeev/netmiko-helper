@@ -1,11 +1,41 @@
 ﻿[
     {
-        "error": "10060 - TimeoutError",
-        "ip": "10.100.3.205",
+        "ip": "10.110.18.10",
+        "result": "ok",
         "vendor": "d-link"
     },
     {
-        "ip": "10.100.0.207",
+        "ip": "10.110.16.10",
+        "result": "ok",
+        "vendor": "d-link"
+    },
+    {
+        "ip": "10.110.6.5",
+        "result": "ok",
+        "vendor": "eltex"
+    },
+    {
+        "ip": "10.110.20.10",
+        "result": "ok",
+        "vendor": "d-link"
+    },
+    {
+        "ip": "10.100.2.206",
+        "result": "ok",
+        "vendor": "d-link"
+    },
+    {
+        "ip": "10.110.0.9",
+        "result": "ok",
+        "vendor": "eltex"
+    },
+    {
+        "ip": "10.100.2.18",
+        "result": "ok",
+        "vendor": "d-link"
+    },
+    {
+        "ip": "10.110.8.36",
         "result": "ok",
         "vendor": "eltex"
     }
