@@ -24,8 +24,8 @@ commands = {
         ['show syslog-servers'],
     'd-link':
         [
-        'create syslog host 1 ipaddress 10.100.3.130 udp_port 514 severity warning facility local7 state enable',
-        'config syslog host 1 ipaddress 10.100.3.130 udp_port 514 severity warning',
+        'create syslog host 1 ipaddress 10.100.3.130 udp_port 514 severity info facility local7 state enable',
+        'config syslog host 1 ipaddress 10.100.3.130 udp_port 514 severity info',
         'enable syslog',
         'show syslog host',
         'enable clipaging',
