@@ -1,11 +1,12 @@
 Template, Hostname, Platform, Command
-dlink_show_switch.textfsm, .*, dlink_ds_telnet, sh[[ow]] sw[[itch]]
-dlink_show_lldp.textfsm, .*, dlink_ds_telnet, sh[[ow]] lldp
-dlink_enable_lldp.textfsm, .*, dlink_ds_telnet, en[[able]] lldp
-dlink_enable ssh.textfsm, .*, dlink_ds_telnet, en[[able]] ssh
-dlink_show_syslog_host.textfsm, .*, dlink_ds_telnet, show syslog host
-dlink_enable.textfsm, .*, dlink_ds_telnet, en[[able]]
-dlink_config.textfsm, .*, dlink_ds_telnet, conf[[ig]]
+dlink_show_switch.textfsm, .*, dlink_ds, sh[[ow]] sw[[itch]]
+dlink_show_lldp.textfsm, .*, dlink_ds, sh[[ow]] lldp
+dlink_enable_lldp.textfsm, .*, dlink_ds, en[[able]] lldp
+dlink_enable ssh.textfsm, .*, dlink_ds, en[[able]] ssh
+dlink_create_syslog_host.textfsm, .*, dlink_ds, create syslog host
+dlink_show_syslog_host.textfsm, .*, dlink_ds, show syslog host
+dlink_enable_syslog.textfsm, .*, dlink_ds, enable syslog
+dlink_config syslog host.textfsm, .*, dlink_ds, config syslog host
 eltex_show_lldp_configuration.textfsm, .*, eltex, sh[[ow]] lldp conf[[iguration]]
 eltex_show_system.textfsm, .*, eltex, sh[[ow]] system
 eltex_show_version.textfsm, .*, eltex, sh[[ow]] ver[[sion]]

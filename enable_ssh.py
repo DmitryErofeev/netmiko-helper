@@ -18,8 +18,8 @@ if not nb_conf:
 
 
 commands = {
-    'eltex':
-        ['sh ip ssh'],
+    # 'eltex':
+        # ['sh ip ssh'],
     'd-link':
         [
         'enable ssh',
@@ -40,46 +40,47 @@ commands = {
 }
 
 configs = {
-    'eltex':
-        [
-            'ip ssh server',
-            'aaa authentication enable default enable',
-            'aaa authentication enable rad_ext_ena radius',
-            'ip http authentication aaa login-authentication radius local',
-            'aaa authentication login default local',
-            'aaa authentication login rad_ext radius local',
+    # 'eltex':
+        # [
+        #     'ip ssh server',
+        #     'aaa authentication enable default enable',
+        #     'aaa authentication enable rad_ext_ena radius',
+        #     'ip http authentication aaa login-authentication radius local',
+        #     'aaa authentication login default local',
+        #     'aaa authentication login rad_ext radius local',
 
-            'line telnet',
-            ' login authentication rad_ext',
-            ' enable authentication rad_ext_ena',
+        #     'line telnet',
+        #     ' login authentication rad_ext',
+        #     ' enable authentication rad_ext_ena',
 
-            'line ssh',
-            ' login authentication rad_ext',
-            ' enable authentication rad_ext_ena',
+        #     'line ssh',
+        #     ' login authentication rad_ext',
+        #     ' enable authentication rad_ext_ena',
             # 'exit',
-        ]
+        # ]
 }
 
 fail_to_connect = []
 error = []
 
 
-def filter_by_key(_data_file):
-    return [d for d in _data_file if d['ssh_status'] == False]
+# def filter_by_key(_data_file):
+#     return [d for d in _data_file if d['ssh_status'] == False]
     # return [d for d in _data_file if d['ssh_status'] == True] # for debug
 
 
 def make_list_ip_for_enable_ssh(_data):
-    _list = [ {x['model']: x['ip']} for x in _data ]
+    _list = [ {'vendor': x['vendor'], 'ip': x['ip']} for x in _data if x]
     return _list
 
 
 finish_result = []
 
 
-with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
+with open('output/errors_syslog.json', 'r', encoding='utf-8-sig') as data_file:
     _data = json.load(data_file)
-    _modified_data = filter_by_key(_data)
+    # _modified_data = filter_by_key(_data)
+    _modified_data = make_list_ip_for_enable_ssh(_data)
     logger.info(f'Список на включение SSH: {make_list_ip_for_enable_ssh(_modified_data)}')
     logger.info(f'Итого: {len(make_list_ip_for_enable_ssh(_modified_data))} штук')
 
@@ -87,7 +88,7 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
     for device in _modified_data:
         _device_result = {}
         _params = {
-            'device_type': device['netmiko_driver'],
+            'device_type': 'dlink_ds_telnet',
             'username': dev_conf['username'],
             'password': dev_conf['password'],
             'ip': device['ip'],
@@ -97,10 +98,10 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
         try:
             with netmiko.ConnectHandler(**_params) as ssh:
                 # посылаем конфиг Элтекса, если он есть
-                if configs.get(device['vendor']):
+                # if configs.get(device['vendor']):
 
-                    out = ssh.send_config_set(configs.get(device['vendor']), cmd_verify=False)
-                    logger.info(f'Выполняю configs Элтекса: {out}')
+                #     out = ssh.send_config_set(configs.get(device['vendor']), cmd_verify=False)
+                #     logger.info(f'Выполняю configs Элтекса: {out}')
 
 
                 if commands.get(device['vendor']):
@@ -143,7 +144,7 @@ with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
                 ssh.save_config()
 
 
-        except (TimeoutError, ConnectionResetError, netmiko.ssh_exception.NetMikoTimeoutException) as ex:
+        except (TimeoutError,  EOFError, ConnectionResetError, netmiko.ssh_exception.NetMikoTimeoutException) as ex:
             _device_result['ip'] = device['ip']
             _device_result['vendor'] = device['vendor']
             _device_result['error'] = f'{ex.args} - {ex.__class__.__name__}'

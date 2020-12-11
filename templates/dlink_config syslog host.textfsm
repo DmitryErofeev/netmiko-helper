@@ -1,4 +1,4 @@
 Value Config (\S+)
 
 Start
-  ^${Config}\.
+  ^${Config}
