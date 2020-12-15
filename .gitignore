@@ -246,6 +246,7 @@ $RECYCLE.BIN/
 
 *.xlsx
 config.json
+/output/*
 output/result.json
 output/enable_ssh.json
 test.log
@@ -259,3 +260,7 @@ output/success_enable_syslog.json
 output/syslog_last.json
 output/errors_enable_syslog.json
 output/success_enable_syslog.json
+enable_syslog_from_file.py
+output/enable_ssh.json
+output/success_enable_syslog.json
+output/errors_enable_syslog.json
