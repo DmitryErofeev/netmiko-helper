@@ -1,10 +1,10 @@
 import json
-
 import netmiko
 import pynetbox
-# import logging
 from loguru import logger
-from netmiko.utilities import get_structured_data
+from make_ports_for_lldp import make_ports
+from commands_for_enable_lldp import do_connect
+
 
 # TODO: Check file exists
 with open("config.json") as json_conf_file:
@@ -18,120 +18,54 @@ nb_conf = conf.get('netbox')
 if not nb_conf:
     raise ValueError
 
-nb = pynetbox.api(nb_conf['url'], nb_conf['token'], threading=True)
 
-# logging.basicConfig(filename='test.log', level=logging.DEBUG)
-# logger = logging.getLogger("netmiko")
-
-# report = []
-
-commands = {
-    'eltex':
-    [
-        'sh lldp configuration'
-    ],
-
-    'd-link':
-    [
-        'enable lldp',
-        'config lldp ports {range} admin_status rx_only',
-        'sh lldp',
-    ]
-}
-
-configs = {
-    'eltex':
-    [
-        'lldp run',
-        'int ra {range}',
-        'no lldp transmit',
-    ]
-}
 fail_to_connect = []
+finish_result = []
 
 
-def filter_by_key(_data_file, key):
-    return [d for d in _data_file if d['lldp_status'] == False]
+def apply_commands(device):
+    logger.info(f'apply_commands()на устройстве{device}')
+    #Собираем информацию по устройству для netmiko
+    _driver = device.device_type.custom_fields['netmiko_driver']
+    _ip = device.primary_ip.address.split('/')[0] # отрезаем префикс от ip
+    _vendor = device.device_type.manufacturer.slug
+    _params = {
+        'device_type': _driver,  # имя драйвера для netmiko
+        'username': dev_conf['username'],
+        'password': dev_conf['password'],
+        'ip': _ip,
+        'timeout': 100,
+    }
+    logger.info(f'Соединяюсь с {_ip}')
+    _ports = make_ports(_ip)
+    _errors, _success = do_connect(_vendor, _ip, _params, _ports)
+
+    fail_to_connect.append(_errors)
+    finish_result.append(_success)
 
 
-def make_ports(device_id):
-    _list_ports = nb.dcim.interfaces.filter(device_id=device_id, type='100base-tx')
-    _ports_for_command = '-'.join([_list_ports[0].name, _list_ports[-1].name.split('/')[-1]])
-    return _ports_for_command
+def get_list_devices_in_region(region):
+    logger.info(f'get_list_devices_in_region(){region}')
+    list_devices = nb.dcim.devices.filter(role='access-switch', region=region, status='active', manufacturer='d-link')
+    return list_devices
 
 
-def make_list_ip_for_enable_lldp(_data):
-    _list = [ {x['model']: x['ip']} for x in _data ]
-    return _list
+def main(region):
+    logger.info(f'main(){region}')
+    for device in get_list_devices_in_region(region): # получаем устройства из региона
+        apply_commands(device) # применяем команды на устройство
+    logger.info(f'Устройства в {region}обработаны')
 
 
-with open('output/result.json', 'r', encoding='utf-8-sig') as data_file:
-    _data_file = json.load(data_file)
-    # _modified_data_file = filter_by_key(_data_file, ('lldp_forward_status', True))
-    # logger.info(f'Список на включение LLDP: {make_list_ip_for_enable_lldp(_modified_data_file)}')
-    logger.info(f'Итого: {len(make_list_ip_for_enable_lldp(_data_file))} штук')
+if __name__ == '__main__':
+    nb = pynetbox.api(nb_conf['url'], nb_conf['token'], threading=True)
+    main('kb')
 
 
-    # if len(_modified_data_file) > 0:
-    #     raise NotImplementedError
+with open('output/success_enable_lldp.json', 'w', encoding='utf-8-sig') as json_file:
+    json.dump(finish_result, json_file, indent=4, sort_keys=True)
 
-    # _modified_data_file = filter_by_key(_data_file, ('lldp_status' == False))
-    # _modified_data_file = filter_by_key(_data_file, ('lldp_status', True))  # for debug
+with open('output/errors_enable_lldp.json', 'w', encoding='utf-8-sig') as json_file2:
+    json.dump(fail_to_connect, json_file2, indent=4, sort_keys=True)
 
-    for device in _data_file:
-
-        _range = make_ports(device['id'])
-        _type = device['model']
-        _driver = device['netmiko_driver']
-        _vendor = device['vendor']
-        _ip = device['ip']
-
-
-
-        if not _driver:
-            logger.info(f"Нет драйвера:{_type}, {_driver}")
-            continue
-        logger.debug(f"Есть драйвер: {_type}, {_driver}")
-
-        _params = {
-            'device_type': _driver,
-            'username': dev_conf['username'],
-            'password': dev_conf['password'],
-            'secret': 'admin',
-            'ip': _ip
-        }
-
-        try:
-            with netmiko.ConnectHandler(**_params) as ssh:
-
-                if configs.get(_vendor):
-                    _conf = [c.format(range=_range) for c in configs.get(_vendor)]
-                    out = ssh.send_config_set(_conf)
-                    logger.info(f'Выполнен конфиг Элтекса.')
-                    if "Unrecognized command" in out:
-                        logger.info(f'Achtung!: {out}')
-
-                for command in commands[_vendor]:
-
-                    # if command.startswith('sh') or command.startswith('en'):
-                    command = command.format(range=_range)
-                    out = ssh.send_command(command, use_textfsm=True)
-                    logger.info(f'Проверяю выполнение команды: {command}: {out}')
-
-                    if not isinstance(out, list):
-                        raise ValueError("Error in result", out, _params['ip'], command)
-
-                    # else:
-                    #     out = ssh.send_command(command.format(range=_range))
-                    #     logger.info(f'Посылаю команду: {out}')
-
-
-                ssh.save_config()
-                # report.append(_device)
-        except Exception as ex :
-            # print(_ip, ex)
-            fail_to_connect.append({_ip: ex.args})
-
-# print('', report)
-if fail_to_connect:
-    logger.info(f'Невозможно соединиться: {fail_to_connect}')
+logger.info(f'LLDP включен на {len(finish_result)} коммутаторах' )

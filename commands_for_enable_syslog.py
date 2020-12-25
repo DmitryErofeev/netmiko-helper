@@ -1,24 +1,5 @@
-# import json
 from loguru import logger
-# import pynetbox
 import netmiko
-# import logging
-# import asyncio
-# from pprint import pprint
-
-# with open("config.json") as json_conf_file:
-#     conf = json.load(json_conf_file)
-
-# dev_conf = conf.get('device')
-# if not dev_conf:
-#     raise ValueError
-
-# nb_conf = conf.get('netbox')
-# if not nb_conf:
-#     raise ValueError
-
-
-# logging.basicConfig(filename='test.log', level=logging.DEBUG)
 
 
 commands = {
