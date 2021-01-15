@@ -1,0 +1,4 @@
+Value LLDP_Ports (\S+)
+
+Start
+  ^${LLDP_Ports}
