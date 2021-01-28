@@ -32,10 +32,10 @@ def make_ports(_list_ports):
     _ports_for_command = '-'.join([_list_ports[0], _list_ports[-1].split('/')[-1]])
     return _ports_for_command
 
-def test_make_ports():
-    assert make_ports(ELTEX_PORTS) == "fa1/0/1-24"
-    assert make_ports(ELTEX_PORTS[0:5]) == "fa1/0/1-5"
-    assert make_ports(ELTEX_PORTS[1:3]) == "fa1/0/2-3"
+# def test_make_ports():
+#     assert make_ports(ELTEX_PORTS) == "fa1/0/1-24"
+#     assert make_ports(ELTEX_PORTS[0:5]) == "fa1/0/1-5"
+#     assert make_ports(ELTEX_PORTS[1:3]) == "fa1/0/2-3"
 
 
 def get_untagged_ports(data):
@@ -51,8 +51,8 @@ def get_untagged_ports(data):
     return list_ports
 
 
-def test_get_untagged_ports():
-    assert get_untagged_ports('1111111100000000000000000000000000000000000000000000000000000000') == [1, 2, 3, 4, 5, 6, 7, 8]
+# def test_get_untagged_ports():
+#     assert get_untagged_ports('1111111100000000000000000000000000000000000000000000000000000000') == [1, 2, 3, 4, 5, 6, 7, 8]
 
 # def test_make_port_range():
 #     assert make_port_range(DLINK_PORTS) == "1-28"

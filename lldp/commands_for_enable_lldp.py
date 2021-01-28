@@ -3,26 +3,27 @@ import netmiko
 
 
 commands = {
-    'eltex':
-    [
-        'sh lldp configuration'
-    ],
+    # 'eltex':
+    # [
+    #     'sh lldp configuration'
+    # ],
 
     'd-link':
     [
-        'config lldp ports {range} admin_status rx_only',
-        'enable lldp',
+        # 'config lldp ports {range} admin_status rx_only',
+        # 'enable lldp',
+        'config lldp forward_message disable',
         'sh lldp',
     ]
 }
 
 configs = {
-    'eltex':
-    [
-        'lldp run',
-        'int ra {range}',
-        'no lldp transmit',
-    ]
+    # 'eltex':
+    # [
+    #     'lldp run',
+    #     'int ra {range}',
+    #     'no lldp transmit',
+    # ]
 }
 
 

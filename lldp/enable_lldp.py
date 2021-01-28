@@ -1,18 +1,22 @@
 import json
 import netmiko
 import pynetbox
-from loguru import logger
-from make_ports_for_lldp import make_ports
-from make_ports_for_lldp import make_ports_eltex
-from commands_for_enable_lldp import do_connect
-from commands_for_enable_lldp_3010 import do_connect_3010
+# from .make_ports_for_lldp import make_ports
+# from .make_ports_for_lldp import make_ports_eltex
+from .commands_for_enable_lldp import do_connect
+
+
+
+# from lldp import do_connect, do_connect_3010, VlanListNotFound
+
+# from .commands_for_enable_lldp_3010 import do_connect_3010
 import paramiko
-from make_ports_for_lldp import VlanListNotFound
+# from .make_ports_for_lldp import VlanListNotFound
 from netmiko.ssh_exception import NetmikoTimeoutException
 
 
 # TODO: Check file exists
-with open("config.json") as json_conf_file:
+with open("../config.json") as json_conf_file:
     conf = json.load(json_conf_file)
 
 dev_conf = conf.get('device')
@@ -45,10 +49,10 @@ def apply_commands(device):
     }
     logger.info(f'Соединяюсь с {_ip}')
 
-    if _vendor == 'dlink':
-        _ports = make_ports(_ip)
-    else:
-        _ports = make_ports_eltex(_ip)
+    # if _vendor == 'dlink':
+    #     _ports = make_ports(_ip)
+    # else:
+    #     _ports = make_ports_eltex(_ip)
 
     try:
         if device.device_type.slug == 'des-3010g':
@@ -68,7 +72,7 @@ def apply_commands(device):
 
 def get_list_devices_in_region(region):
     logger.info(f'get_list_devices_in_region(){region}')
-    list_devices = nb.dcim.devices.filter(role='access-switch', region=region, status='active', manufacturer='eltex')
+    list_devices = nb.dcim.devices.filter(role='access-switch', region=region, status='active', model='des-1210-28me')
     return list_devices
 
 
@@ -81,7 +85,7 @@ def main(region):
 
 if __name__ == '__main__':
     nb = pynetbox.api(nb_conf['url'], nb_conf['token'], threading=True)
-    region = 'oz'
+    region = 'dm'
     main(region)
 
 

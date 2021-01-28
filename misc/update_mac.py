@@ -3,7 +3,7 @@ import pynetbox
 import json
 from loguru import logger
 from retry import retry
-# Обновляет в Нетбоксе поле MAC, маком из свитча.
+# Обновляет в Нетбоксе поле MAC, Model, Sys_Descr маком из свитча.
 
 with open('config.json') as json_conf_file:
     config = json.load(json_conf_file)
@@ -21,7 +21,7 @@ def get_devices_in_region(region, role):
     devices_list = nb.dcim.devices.filter(region=region, status='active', role=role)
     return devices_list
 
-@retry(exceptions=Exception, tries=5, delay=2, backoff=2, logger=logger)
+@retry(exceptions=Exception, tries=5, delay=3, backoff=2, logger=logger)
 def ask_devices_for_mac(ip):
     temp_dict = {}
 
@@ -41,7 +41,7 @@ def ask_devices_for_mac(ip):
     else:
         temp_dict['sys_descr'] = sys_descr
         temp_dict['model'] = model
-        temp_dict['mac'] = 'None'
+        temp_dict['mac'] = ''
 
     return temp_dict
 
@@ -60,26 +60,52 @@ def main(region, role):
             # p_mac_from_netbox = device.custom_fields.P_MAC
 
 
-            custom_fields = device.custom_fields
+            custom_fields = device.custom_fields.copy()
 
-            if custom_fields.get('MAC'):
-                no_error['ip'] = device_ip
-                no_error['MAC'] = 'MAC-yes'
-                succes.append(no_error)
+            if not custom_fields.get('Model'):
+                if valid_data_from_device.get('model') == "None":
+                    logger.error(f'API не вернул model {device.device_type.model} ')
+                    error = {}
+                    error['ip'] = device.primary_ip.address.split('/')[0]
+                    fail.append(error)
 
-            elif valid_data_from_device['mac'] == 'None':
-                logger.error(f'API не вернул Mac {device.device_type.model} ')
-                error = {}
-                error['ip'] = device.primary_ip.address.split('/')[0]
-                fail.append(error)
+                else:
+                    custom_fields |= {'Model': valid_data_from_device['model'] }
+                    logger.info(f'Записываем model из устройства в кастомное поле "Model" в Нетбокс')
+                    no_error['Model'] = 'Model-yes'
+                    no_error['ip'] = device_ip
+                    succes.append(no_error)
 
-            else:
-                custom_fields |= {'MAC': valid_data_from_device['mac'].lower() }
-                logger.info(f'Записываем МАК из устройства в кастомное поле "Mac" в Нетбокс')
-                device.update({
-                    'custom_felds': custom_fields})
-                no_error['ip'] = device_ip
-                succes.append(no_error)
+            if not custom_fields.get('sysDescr'):
+                if not valid_data_from_device.get('sys_descr'):
+                    logger.error(f'API не вернул sys_descr {device.device_type.model} ')
+                    error = {}
+                    error['ip'] = device.primary_ip.address.split('/')[0]
+                    fail.append(error)
+
+                else:
+                    custom_fields |= {'sysDescr': valid_data_from_device['sys_descr'] }
+                    logger.info(f'Записываем sysDescr из устройства в кастомное поле "sysDescr" в Нетбокс')
+                    no_error['sysDescr'] = 'sysDescr-yes'
+                    no_error['ip'] = device_ip
+                    succes.append(no_error)
+
+
+            if not custom_fields.get('MAC'):
+                if not valid_data_from_device.get('mac'):
+                    logger.error(f'API не вернул Mac {device.device_type.model} ')
+                    error = {}
+                    error['ip'] = device.primary_ip.address.split('/')[0]
+                    fail.append(error)
+
+                else:
+                    custom_fields |= {'MAC': valid_data_from_device['mac'].lower() }
+                    logger.info(f'Записываем МАК из устройства в кастомное поле "Mac" в Нетбокс')
+                    no_error['MAC'] = 'MAC-yes'
+                    no_error['ip'] = device_ip
+                    succes.append(no_error)
+
+            device.update({'custom_fields': custom_fields})
 
 
     logger.info(f'Регион обработан')
