@@ -1,22 +1,20 @@
 import json
 import netmiko
 import pynetbox
+import paramiko
+from loguru import logger
+
 # from .make_ports_for_lldp import make_ports
 # from .make_ports_for_lldp import make_ports_eltex
-from .commands_for_enable_lldp import do_connect
 
+from commands_for_enable_lldp import do_connect
+from commands_for_enable_lldp_3010 import do_connect_3010
 
-
-# from lldp import do_connect, do_connect_3010, VlanListNotFound
-
-# from .commands_for_enable_lldp_3010 import do_connect_3010
-import paramiko
-# from .make_ports_for_lldp import VlanListNotFound
-from netmiko.ssh_exception import NetmikoTimeoutException
+from make_ports_for_lldp import VlanListNotFound
 
 
 # TODO: Check file exists
-with open("../config.json") as json_conf_file:
+with open("config.json") as json_conf_file:
     conf = json.load(json_conf_file)
 
 dev_conf = conf.get('device')
@@ -56,13 +54,13 @@ def apply_commands(device):
 
     try:
         if device.device_type.slug == 'des-3010g':
-            _success = do_connect_3010(_vendor, _ip, _params, _ports)
+            _success = do_connect_3010(_vendor, _ip, _params) # тут надо _ports
         else:
-            _success = do_connect(_vendor, _ip, _params, _ports)
+            _success = do_connect(_vendor, _ip, _params) # тут надо _ports
 
         finish_result.append(_success)
 
-    except(TimeoutError,NetmikoTimeoutException, VlanListNotFound, OSError, netmiko.ssh_exception.NetmikoTimeoutException, paramiko.ssh_exception.SSHException,
+    except(TimeoutError,VlanListNotFound, OSError, netmiko.ssh_exception.NetmikoTimeoutException, paramiko.ssh_exception.SSHException,
     ConnectionResetError, netmiko.ssh_exception.NetmikoAuthenticationException) as ex:
         _error = {}
         _error['ip'] = _ip
