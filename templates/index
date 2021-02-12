@@ -8,6 +8,7 @@ dlink_show_syslog_host.textfsm, .*, dlink_ds, show syslog host
 dlink_enable_syslog.textfsm, .*, dlink_ds, enable syslog
 dlink_config_syslog host.textfsm, .*, dlink_ds, config syslog host
 dlink_config_lldp_ports.textfsm, .*, dlink_ds, config lldp ports
+dlink_config_gvrp.textfsm, .*, dlink_ds, config gvrp
 eltex_show_lldp_configuration.textfsm, .*, eltex, sh[[ow]] lldp conf[[iguration]]
 eltex_show_system.textfsm, .*, eltex, sh[[ow]] system
 eltex_show_version.textfsm, .*, eltex, sh[[ow]] ver[[sion]]

@@ -11,7 +11,7 @@ commands = {
     'd-link':
     [
         # 'config lldp ports {range} admin_status rx_only',
-        # 'enable lldp',
+        'enable lldp',
         'config lldp forward_message disable',
         'sh lldp',
     ]
