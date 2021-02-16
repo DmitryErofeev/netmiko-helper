@@ -20,6 +20,25 @@ nb = pynetbox.api(nb_conf['url'], nb_conf['token'], threading=True)
 errors = []
 # result = {}
 
+
+def hex_string(input_string):
+    """
+    Возвращает HEX-STRING.
+
+    :param str input_string: строка для преобразования в HEX
+    :rtype: str
+    :return: HEX-STRING
+    """
+
+    return ''.join([f'{ord(c):02X}' for c in input_string])
+
+
+def hex_ip(input_string):
+    _hex = hex_string(input_string)
+    return '.'.join([str(int(_hex[n:n+2], 16)) for n in range(0,len(_hex),2)])
+
+
+
 def get_devices(args):
     list_devices = nb.dcim.devices.filter(**args)
     return  list_devices
@@ -86,16 +105,29 @@ def get_device_vc_from_netbox(device, port):
     return result
 
 
+def get_remote_device_from_netbox(local_device, local_port, neightbor):
 
-def get_remote_device_from_netbox(neightbor):
     if neightbor['CidType'] == '4':
         mac = neightbor['Cid']
         device = nb.dcim.devices.get(status='active', cf_MAC=mac )
         if device:
-            ic('Сосед найден в Нетбокс')
+            ic(local_device, 'Сосед найден в Нетбокс')
+    elif neightbor['CidType'] == '5':
+        _ip = hex_ip(neightbor['Cid'])
+        logger.info(f'Не найден IP в Нетбоксе!')
+        errors.append({
+                        'local_device': local_device.primary_ip.address,
+                         _ip: 'Не найден IP в Нетбоксе!',
+                        'local_port': local_port,
+                        })
+        device = None
     else:
         logger.error(f'Не найден МАК в Нетбоксе!')
-        errors.append({neightbor['Cid']: 'Нет Мака в Нетбоксе'})
+        errors.append({
+                        'local_device': local_device.primary_ip.address,
+                        neightbor['Cid']: 'Не найден МАК в Нетбоксе!',
+                        'local_port': local_port,
+                        })
         device = None
     return device
 
@@ -112,13 +144,26 @@ def get_remote_port_id_from_netbox(remote_device, local_device, neightbor):
 
         # Если вместо номера порта- МАК
         if neightbor['PidType'] == '3':
-            port_name = int(neightbor['Pid'], 16) - int(neightbor['Cid'], 16)
+            if remote_device.device_type.slug == 'dgs-3420-28sc':
+
+                # Диапазон портов - ChaissisID + StackID * 256
+                chaisis = (int(neightbor['Pid'], 16) - int(neightbor['Cid'], 16)) // 256
+                port = (int(neightbor['Pid'], 16) - int(neightbor['Cid'], 16)) % 256
+                port_name = port + 1
+
+            else:
+                port_name = int(neightbor['Pid'], 16) - int(neightbor['Cid'], 16)
+
+        if neightbor['PidType'] == '5':
+            ...
+
 
         # '1/25\x00'
         if neightbor['PidType'] == '7':
             if len(neightbor['Pid']) == 12:
                  neightbor['Pid'] = bytes.fromhex(neightbor['Pid']).decode('utf-8')
             port_name = neightbor['Pid'].strip('\x00').split('/')[-1]
+
     if port_name:
         nb_port = nb.dcim.interfaces.get(device_id=remote_device.id, name=port_name)
     else:
@@ -129,7 +174,8 @@ def get_remote_port_id_from_netbox(remote_device, local_device, neightbor):
     except Exception as ex:
         logger.error(f'Exception: {ex}')
         errors.append({remote_device.primary_ip.address.split('/')[0]: 'Нет удаленного порта в Нетбоксе',
-                    local_device.primary_ip.address.split('/')[0]: remote_device.primary_ip.address.split('/')[0]
+                    local_device.primary_ip.address.split('/')[0]: remote_device.primary_ip.address.split('/')[0],
+                    'Удаленный порт': neightbor['Pid'],
                          })
 
     return port_id
@@ -191,10 +237,14 @@ def main(region):
                     ic(local_port_id, port, PORT_MAP.get(port), device_vc)
 
                 #Ищет в Нетбоксе коммутатор по Маку
-                remote_device = get_remote_device_from_netbox(neightbor)
+                remote_device = get_remote_device_from_netbox(device, port, neightbor)
                 ic(remote_device, neightbor)
                 if not remote_device:
                     logger.error(f"Сосед не найден в NetBox - {port}: {neightbor}")
+                    errors.append({port: neightbor,
+                                    'Сосед не найден в Нетбокс': device.primary_ip.address
+
+                                    })
                     continue
 
                 #Ищет в Нетбоксе id удаленного порта
@@ -203,12 +253,12 @@ def main(region):
 
 
                 # Создает линк между портами коммутаторов в Нетбоксе
-                # link = create_link(local_port_id, remote_port_id)
-                # ic(link)
-                # if link:
-                #     pass
-                # else:
-                #     ic('Error create link', local_port_id, remote_port_id)
+                link = create_link(local_port_id, remote_port_id)
+                ic(link)
+                if link:
+                    pass
+                else:
+                    ic('Error create link', local_port_id, remote_port_id)
 
         else:
             logger.error(f'Нет соседства у {_ip}')
@@ -217,7 +267,7 @@ def main(region):
 
 
 if __name__ == '__main__':
-    region = 'kirova-8'
+    region = 'pr-cherepnina-2a'
     roles = [
         'distribution-switch',
         'access-switch',
@@ -228,7 +278,7 @@ if __name__ == '__main__':
             # 'tag': 'test-lldp',
             'status': 'active',
             'role':role,
-            # 'name': 'ld-ul-1-maya-20.2.2',
+            # 'name': 'oz-ul-lopatina-20a.1',
         }
         main(params)
 
