@@ -39,12 +39,12 @@ commands = {
     'd-link':
     [
         'sh sw',
-        'sh lldp'
+        # 'sh lldp'
     ]
 
 }
 
-_list = nb.dcim.devices.filter(region='kb', role='access-switch')
+_list = nb.dcim.devices.filter(region='ld', status='active', role='access-switch', model='des-1210-28me')
 # _list = [nb.dcim.devices.get(9128),]
 
 fail_to_connect = []
@@ -66,12 +66,10 @@ for device in _list:
     _driver = device.device_type.custom_fields['netmiko_driver']
     _ip = device.primary_ip
 
-
     if not _driver:
         print("Device:", _type, _driver)
         continue
     print("Device:", _type, _driver)
-
 
     _params = {
         'device_type': _driver,
@@ -81,7 +79,6 @@ for device in _list:
         'ip': _ip.address.split('/')[0]
     }
 
-
     try:
         with netmiko.ConnectHandler(**_params) as ssh:
 
@@ -89,9 +86,8 @@ for device in _list:
                 'ip': _ip.address.split('/')[0],
                 'id': device.id,
                 'vendor': device.device_type.manufacturer.slug,
-                'netmiko_driver' : _driver
+                'netmiko_driver': _driver
             }
-
 
             for command in commands.get(_device['vendor']):
                 out = ssh.send_command(command)
@@ -114,12 +110,7 @@ for device in _list:
             _device['snmp_status'] = make_true(_device.get('snmp_status'))
 
             report.append(_device)
-    except (
-        TimeoutError,
-        ValueError,
-        netmiko.ssh_exception.NetMikoTimeoutException,
-        netmiko.ssh_exception.NetmikoAuthenticationException
-    ) as ex:
+    except Exception as ex:
         print(_ip, ex.args)
         fail_to_connect.append({_ip: ex.args})
         continue

@@ -9,7 +9,6 @@ import netmiko
 from icecream import ic
 from make_ports_for_lldp import PORT_MAP
 
-#
 
 with open("config.json") as json_conf_file:
     conf = json.load(json_conf_file)
@@ -29,7 +28,6 @@ def hex_string(input_string):
     :rtype: str
     :return: HEX-STRING
     """
-
     return ''.join([f'{ord(c):02X}' for c in input_string])
 
 
@@ -38,10 +36,10 @@ def hex_ip(input_string):
     return '.'.join([str(int(_hex[n:n+2], 16)) for n in range(0,len(_hex),2)])
 
 
-
 def get_devices(args):
     list_devices = nb.dcim.devices.filter(**args)
     return  list_devices
+
 
 @lru_cache
 @retry(exceptions=json.JSONDecodeError, tries=5, delay=3, backoff=2, logger=logger)
@@ -65,6 +63,7 @@ def make_remote_table(lldp_rem_table):
         '1.7': 'Pid',
     }
     table = {}
+
 
     for key, val in lldp_rem_table.items():
         res = key.rsplit('.', maxsplit=3)
@@ -129,6 +128,7 @@ def get_remote_device_from_netbox(local_device, local_port, neightbor):
                         'local_port': local_port,
                         })
         device = None
+
     return device
 
 
@@ -156,7 +156,6 @@ def get_remote_port_id_from_netbox(remote_device, local_device, neightbor):
 
         if neightbor['PidType'] == '5':
             ...
-
 
         # '1/25\x00'
         if neightbor['PidType'] == '7':
@@ -251,7 +250,6 @@ def main(region):
                 remote_port_id = get_remote_port_id_from_netbox(remote_device, device, neightbor)
                 ic(remote_port_id)
 
-
                 # Создает линк между портами коммутаторов в Нетбоксе
                 link = create_link(local_port_id, remote_port_id)
                 ic(link)
@@ -267,18 +265,18 @@ def main(region):
 
 
 if __name__ == '__main__':
-    region = 'pr-cherepnina-2a'
+    region = 'bondarenko-10'
     roles = [
         'distribution-switch',
-        'access-switch',
+        # 'access-switch',
         ]
     for role in roles:
         params = {
-            'region': region,
+            # 'region': region,
             # 'tag': 'test-lldp',
             'status': 'active',
             'role':role,
-            # 'name': 'oz-ul-lopatina-20a.1',
+            'name': 'oz-ul-gagarina-23.0',
         }
         main(params)
 
